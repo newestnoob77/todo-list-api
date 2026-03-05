@@ -31,13 +31,18 @@ console.log(user)
 if(!user) return res.status(400).send("User not found")
 const result = await bcrypt.compare(password,user.password);
 if(result){
-    const token = jwt.sign({
+    const accessToken = jwt.sign({
         userId: user._id,          // use lowercase and Mongo _id
         email: user.email
-    }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    }, process.env.JWT_SECRET, { expiresIn: "15m" });
+    const refreshToken=jwt.sign(
+        {userId:user._id},
+        process.env.REFREST_TOKEN,
+        {expiresIn:"7d"}
+    )
     user.tokens.push(token);
     await user.save();
-    return res.status(200).json(token);
+    return res.status(200).json({accessToken,refreshToken});
 }
 else{
     return res.status(404).send("Incorrect credentials")
@@ -78,5 +83,37 @@ catch(err){
     throw new ApplicationError("Logout from all device failed")
 }
     }
+
+async refresh(req,res,next){
+    try{
+const {refreshToken}=req.body
+if(!refreshToken) return res.status(401).send("Missing refresh token")
+const payload = jwt.verify(refreshToken,process.env.REFREST_TOKEN)
+const user = await this.userRepository.findById(payload.userId);
+if(!user || user.refreshToken !== refreshToken) return res.status(403).send("Invalid refresh token")
+    // Issue new tokens
+    const accessToken = jwt.sign(
+      { userId: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" }
+    );
+
+    const newRefreshToken = jwt.sign(
+      { userId: user._id },
+      process.env.REFRESH_SECRET,
+      { expiresIn: "7d" }
+    );
+
+user.tokens.push(accessToken)
+user.refreshToken=newRefreshToken
+await user.save()
+return res.json({ accessToken, refreshToken: newRefreshToken });
+}
+    catch(err){
+        console.log(err)
+        throw new ApplicationError("Something went wrong")
+    }
+}
+
     
 }
