@@ -6,6 +6,7 @@ export default class TodoController{
     constructor(){
 this.todoRepository = new TodoRepository
     }
+    
         async createTodoList(req,res,next){
 try{
 const{userId}=req.params;
@@ -21,9 +22,21 @@ return res.status(201).send(result)
     }
     async getTodoList(req,res,next){
         try{
-const result = await this.todoRepository.getTodoList()
-if(!result ) return res.status(400).send("Failed to get todo list ")
- return res.status(200).send(result)
+const page =parseInt(req.query.page)||1
+const limit = parseInt(req.query.limit)||10;
+const skip=(page-1)*limit
+const filters={}
+if(req.query.title){
+    filters.title={$regex:req.query.title,$options:"i"};
+}
+if(req.query.status){
+    filters.status =req.query.status
+}
+const sortField =req.query.sortBy||"createdAt";
+const sortOrder=req.query.order=="desc"?-1:1;
+const todos = await this.todoRepository.getTodoList(filters,skip,limit,sortField,sortOrder);
+const total =await this.todoRepository.countTodos(filters);
+return res.status(200).json({data:todos,page,limit,total})
         }
         catch(err){
             console.log(err)

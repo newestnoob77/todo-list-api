@@ -8,8 +8,11 @@ const newTodo= new todoModel(todoData)
 await newTodo.save()
 return newTodo
     }
-    async getTodoList(){
-return await todoModel.find()
+    async getTodoList(filters, skip, limit, sortField, sortOrder){
+return (await todoModel.find(filters).skip(skip).limit(limit)).toSorted({[sortField]:sortOrder})
+    }
+    async countTodos(filters){
+        return await todoModel.countDocuments(filters)
     }
     async uploadTodoList(todoId,updateData){
 return await todoModel.findOneAndUpdate({_id:todoId},{$set:updateData},{returnDocument:"after"})

@@ -8,6 +8,7 @@ const userAuthSchema = new mongoose.Schema({
         match:[/.+\@.+\..+/,"Please enter a valid email"],
     },
     password:{type:String,required:true},
-    tokens:{type:[String],default:[]}
+    tokens:{type:[String],default:[]},
+    refreshToken:{type:String,default:null}
 })
 export const userAuthModel = mongoose.model("User",userAuthSchema)

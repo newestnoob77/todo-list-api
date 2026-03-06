@@ -15,6 +15,8 @@ userController.logout(req,res,next)
   userRouter.post("/logout-from-all-devices",jwtAuth,(req,res,next)=>{
 userController.logoutfromAllDevices(req,res,next)
  })
- 
+ userRouter.post("/refresh",(req,res,next)=>{
+  userController.refresh(req,res,next)
+ })
  
  

@@ -22,4 +22,7 @@ const user = await userAuthModel.findById(userId);
 user.tokens=[]
 return await user.save()
     }
+    async findById(userId){
+        return await userAuthModel.findById(userId)
+    }
 }
